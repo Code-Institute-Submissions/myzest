@@ -2,9 +2,9 @@
 # coding: utf-8
 
 from myzest import app
+import os
 
 
 if __name__ == "__main__":
-    app.run(host="localhost",
-            port=int("5000"),
-            debug=True)
+    app.run(host=os.environ.get('IP'),
+            port=os.environ.get('PORT'))
