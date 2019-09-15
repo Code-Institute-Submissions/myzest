@@ -32,6 +32,21 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+def formdata_to_query(data):
+    time = {
+        "$gte": int(data.pop("timer.start")),
+        "$lte": int(data.pop("timer.stop"))
+    }
+    serves = {
+        '$gte': int(data.pop('serve.start')),
+        '$lte': int(data.pop('serve.stop'))
+    }
+    query = {k: v for (k, v) in data.items() if data[k] != "any"}
+    query['serves'] = serves
+    query['time.total'] = time
+    return query
+
+
 @app.route('/')
 @app.route('/home')
 def home():
@@ -100,15 +115,15 @@ def add_user():
 def check_usr():
     data = request.get_json()
     if data['field'] == 'username':
-        if mongo.db.users.find_one({'username': data['userdata'].title()}):
-            return jsonify({'error': 'username', 'message': 'This username is already taken'})
-    if data['field'] == 'email':
-        email = mongo.db.users.find_one({'email': data['userdata'].lower()})
-        if data['form'] == "registration" and email is not None:
-            return jsonify({'error': 'email', 'message': 'This email is already in use'})
-        if data['form'] == "login" and email is None:
-            return jsonify({'error': 'email', 'message': 'This email is not registered'})
-    return 'success'
+        value = data['value'].title()
+    else:
+        value = data['value'].lower()
+    document = bool(mongo.db.users.find_one({data['field']: value}))
+
+    if data['form'] == "registration":
+        return jsonify({'error': "This {} is already taken".format(data['field'])}) if document else "success"
+    else:
+        return "success" if document else jsonify({'error': "This {} is not registered".format(data['field'])})
 
 
 @app.route('/login')
@@ -355,17 +370,7 @@ def search_recipes():
 
         order = [(data.pop("order"), -1) if data['order'] in ['favorite', 'views', 'updated']
                  else (data.pop("order"), 1)]
-        time = {
-            "$gte": int(data.pop("timer.start")),
-            "$lte": int(data.pop("timer.stop"))
-        }
-        serves = {
-            '$gte': int(data.pop('serve.start')),
-            '$lte': int(data.pop('serve.stop'))
-        }
-        query = {k: v for (k, v) in data.items() if data[k] != "any"}
-        query['serves'] = serves
-        query['time.total'] = time
+        query = formdata_to_query(data)
 
         session['search'] = {'query': query,
                              'order': order}
@@ -390,3 +395,29 @@ def search_recipes():
                            recipes=results,
                            pages=pages,
                            current_page=target_page)
+
+
+@app.route('/searchcount', methods=['POST'])
+def searchcount():
+    data = request.get_json()
+    query = formdata_to_query(data)
+    nbr_recipes = mongo.db.recipes.find(query).count()
+    return jsonify({"nbr_recipes": nbr_recipes})
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+@app.route('/contact')
+def contact():
+    if 'user' in session:
+        user_email = mongo.db.users.distinct('email', {'_id': ObjectId(session['user']['_id'])})[0]
+        return render_template('contact.html', user=session['user'], email=user_email)
+    return render_template('contact.html')
