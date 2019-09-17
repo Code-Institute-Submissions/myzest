@@ -32,6 +32,13 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
+@app.template_filter()
+def min_to_hour(time):
+    h = time // 60
+    m = time % 60
+    return str(h) + "h" + str(m) if h > 0 else str(m)
+
+
 def formdata_to_query(data):
     time = {
         "$gte": int(data.pop("timer.start")),
@@ -421,3 +428,9 @@ def contact():
         user_email = mongo.db.users.distinct('email', {'_id': ObjectId(session['user']['_id'])})[0]
         return render_template('contact.html', user=session['user'], email=user_email)
     return render_template('contact.html')
+
+
+@app.errorhandler(500)
+@app.errorhandler(404)
+def page_error(error):
+    return render_template('error.html')

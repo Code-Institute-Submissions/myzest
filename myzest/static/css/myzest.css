@@ -404,8 +404,15 @@ html, body {
   padding: 1em;
   margin-bottom: 40px; }
 
-.rcpcard-sumup {
-  font-size: 0.9em; }
+#rcpcard-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap; }
+  #rcpcard-details .rcpcard-sumup {
+    font-size: 0.9em; }
+  #rcpcard-details .material-icons {
+    font-size: 1.5em; }
 
 .rcpcard-footer {
   position: absolute;
@@ -460,8 +467,30 @@ html, body {
   margin-right: auto;
   width: 250px;
   justify-content: space-between;
-  font-style: italic;
   cursor: pointer; }
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100% - 219px); }
+  .error-page header {
+    z-index: 2;
+    text-align: center;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.5); }
+
+#cracked-bg {
+  z-index: -2;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-size: cover;
+  background-image: url("../img/crack.jpg");
+  filter: blur(1px) saturate(60%); }
 
 .noUi-horizontal {
   height: 3px;
