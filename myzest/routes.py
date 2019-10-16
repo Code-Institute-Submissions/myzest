@@ -7,18 +7,15 @@ import math
 from datetime import date
 from os import path
 
-
-rcp_diff = ("easy", "average", "hard")
-rcp_sorting = (("name", "Name"),
-               ("updated", "Date"),
-               ("favorite", "Popularity"),
-               ("views", "Viewed"),
-               ("time.total", "Time"),
-               ("serves", "Servings"))
-rcp_foodTypes = mongo.db.foodtype.distinct("name")
-rcp_foodTypes.sort()
-rcp_foodCategories = mongo.db.category.distinct("name")
-rcp_foodCategories.sort()
+rcp = {
+        'difficulties': ("easy", "average", "hard"),
+        'sortings': (("name", "Name"), ("updated", "Date"), ("favorite", "Popularity"), ("views", "Viewed"),
+                     ("time.total", "Time"), ("serves", "Servings")),
+        'foodTypes': mongo.db.foodtype.distinct("name"),
+        'foodCategories': mongo.db.category.distinct("name")
+    }
+rcp['foodTypes'].sort()
+rcp['foodCategories'].sort()
 
 pic_extensions = ("jpg", "jpeg", "png", "gif")
 
@@ -40,23 +37,84 @@ def min_to_hour(time):
 
 
 def formdata_to_query(data):
-    time = {
-        "$gte": int(data.pop("timer.start")),
-        "$lte": int(data.pop("timer.stop"))
-    }
-    serves = {
-        '$gte': int(data.pop('serve.start')),
-        '$lte': int(data.pop('serve.stop'))
-    }
-    query = {k: v for (k, v) in data.items() if data[k] != "any"}
+    """ Processes data from the search form to build query with relevant fields only"""
+    # time and serves
+    try:
+        time = {
+            "$gte": int(data.pop("timer.start")),
+            "$lte": int(data.pop("timer.stop"))
+        }
+        serves = {
+            '$gte': int(data.pop('serve.start')),
+            '$lte': int(data.pop('serve.stop'))
+        }
+    except(KeyError):
+        time = {
+            "$gte": int(5),
+            "$lte": int(240)
+        }
+        serves = {
+            '$gte': int(1),
+            '$lte': int(20)
+        }
+    # text
+    try:
+        if data['textSearch'] == '':
+            text_search = False
+            del data['textSearch']
+        else:
+            text_search = True
+            words = {'$search': data.pop('textSearch')}
+    except(KeyError):
+        text_search = False
+    query = {k: v for (k, v) in data.items() if data[k] not in ["any", ""]}
     query['serves'] = serves
     query['time.total'] = time
+
+    if text_search:
+        query['$text'] = words
+
     return query
+
+
+def make_query(requested_data):
+    """ Builds mongoDB query from form data posted to search_recipes
+    and stores into session 'search' dict """
+
+    data = requested_data.to_dict()
+
+    sort = [(data.pop("sort"), -1) if data['sort'] in ['favorite', 'views', 'updated']
+            else (data.pop("sort"), 1)]
+
+    query = formdata_to_query(data)
+
+    session['search'] = {'query': query,
+                         'sort': sort}
+
+    return query, sort
+
+
+class Paginate:
+    """ Queries MongoDB for recipes and builds pagination """
+
+    per_page = 4
+
+    def __init__(self, query, sort, target_page=1):
+        self.recipes = mongo.db.recipes.find(query).sort(sort)
+        self.total = math.ceil(self.recipes.count() / self.per_page)
+        self.current = target_page
+
+    def get_page(self):
+        to_skip = self.per_page * (self.current - 1)
+        return self.recipes.skip(to_skip).limit(self.per_page)
 
 
 @app.route('/')
 @app.route('/home')
 def home():
+    # store recipe criterias
+    session['rcp'] = rcp
+
     if 'views' not in session:
         session['views'] = []
 
@@ -68,12 +126,12 @@ def home():
         {'$sort': {'updated': -1}},
         {'$limit': 5}
     ])
-    return render_template('home.html',
-                           latests=latests,
-                           top_faved=top_faved,
-                           foodtypes=rcp_foodTypes,
-                           sorts=rcp_sorting,
-                           difficulties=rcp_diff)
+
+    query = session['search']['query'] if 'search' in session else {}
+    sort = session['search']['sort'] if 'search' in session else session['rcp']['sortings']
+
+    return render_template('home.html', latests=latests, top_faved=top_faved,
+                           query=query, sort=sort[0][0])
 
 
 @app.route('/recipe/<recipe_id>')
@@ -118,8 +176,8 @@ def add_user():
     return redirect('home')
 
 
-@app.route('/check_usr', methods=['POST'])
-def check_usr():
+@app.route('/check_user', methods=['POST'])
+def check_user():
     data = request.get_json()
     if data['field'] == 'username':
         value = data['value'].title()
@@ -182,7 +240,7 @@ def add_recipe():
     if 'user' not in session:
         flash('To add recipes, you need to login first', 'warning')
         return redirect('login')
-    return render_template('addrecipe.html', foodtype=rcp_foodTypes, difficulties=rcp_diff)
+    return render_template('addrecipe.html')
 
 
 @app.route('/insertrecipe', methods=['GET', 'POST'])
@@ -327,7 +385,7 @@ def update_rcp(recipe_id):
 
         return redirect('/recipe/{}'.format(recipe_id))
 
-    return render_template('updaterecipe.html', recipe=this_recipe, foodtypes=rcp_foodTypes, difficulties=rcp_diff)
+    return render_template('updaterecipe.html', recipe=this_recipe)
 
 
 @app.route('/favme', methods=['POST'])
@@ -363,45 +421,27 @@ def favme():
 
 @app.route('/searchrecipes', methods=['GET', 'POST'])
 def search_recipes():
-
-    per_page = 4
-    target_page = 1
-
-    if 'search' not in session:
-        query = {}
-        order = {}
+    """ Queries DB and paginate results;
+     End point is first accessed with POST request which stores query and sort in session object """
 
     if request.method == "POST":
 
-        data = request.form.to_dict()
+        query, sort = make_query(request.form)
+        paginate = Paginate(query, sort)
 
-        order = [(data.pop("order"), -1) if data['order'] in ['favorite', 'views', 'updated']
-                 else (data.pop("order"), 1)]
-        query = formdata_to_query(data)
-
-        session['search'] = {'query': query,
-                             'order': order}
-
-    if request.method == 'GET':
+    elif request.method == 'GET':
         query = session['search']['query']
-        order = session['search']['order']
-        target_page = int(request.args['target_page'])
+        sort = session['search']['sort']
 
-    recipes = mongo.db.recipes.find(query).sort(order)
+        paginate = Paginate(query, sort, int(request.args['target_page']))
 
-    pages = math.ceil(recipes.count() / per_page)
-    to_skip = per_page * (target_page - 1)
+    results = paginate.get_page()
 
-    results = recipes.skip(to_skip).limit(per_page)
-
-    return render_template('recipes.html', difficulties=rcp_diff,
-                           foodtypes=rcp_foodTypes,
-                           sorts=rcp_sorting,
+    return render_template('results.html',
                            query=query,
-                           order=order[0][0],
-                           recipes=results,
-                           pages=pages,
-                           current_page=target_page)
+                           sort=sort[0][0],
+                           results=results,
+                           page=paginate)
 
 
 @app.route('/searchcount', methods=['POST'])
