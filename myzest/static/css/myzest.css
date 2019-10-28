@@ -458,7 +458,7 @@ html, body {
   width: 220px;
 }
 
-#quick-search {
+#home-search {
   margin-left: auto;
   margin-right: auto;
   width: 300px;
@@ -546,10 +546,12 @@ html, body {
   font-size: 0.8rem;
 }
 
-.user-tbn {
+.author-tbn {
   display: block;
   border-radius: 50%;
   width: 30px;
+  height: 30px;
+  object-fit: cover;
 }
 
 .rcp-header {
@@ -573,6 +575,7 @@ html, body {
   border-radius: 50%;
   width: 50px;
   height: 50px;
+  object-fit: cover;
 }
 
 .rcp-results {
@@ -600,10 +603,21 @@ html, body {
 }
 .profile-title {
   font-family: "Donegal One", serif;
+  font-size: 2em;
+  word-break: break-word;
 }
 
-.profile-tbn {
+#profile {
+  position: relative;
+}
+#profile .profile-tbn {
   border-radius: 50%;
+  object-fit: cover;
+}
+#profile #profile-edit-btn {
+  position: absolute;
+  bottom: -2em;
+  right: 1em;
 }
 
 .error-page {
