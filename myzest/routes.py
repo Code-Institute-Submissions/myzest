@@ -33,7 +33,10 @@ class JSONEncoder(json.JSONEncoder):
 def min_to_hour(time):
     h = time // 60
     m = time % 60
-    return str(h) + "h" + str(m) if h > 0 else str(m)
+    if h > 0:
+        return str(h) + "h" + str(m) if m > 0 else str(h) + "h"
+    else:
+        return str(m) + "m"
 
 
 @app.template_filter()
@@ -104,7 +107,8 @@ class Paginate:
     per_page = 6
 
     def __init__(self, query, sort, target_page=1):
-        self.total_pages = math.ceil(mongo.db.recipes.find(query).count() / self.per_page)
+        self.total_recipes = mongo.db.recipes.find(query).count()
+        self.total_pages = math.ceil(self.total_recipes / self.per_page)
         self.current = target_page
         self.to_skip = self.per_page * (self.current - 1)
         self.recipes = mongo.db.recipes.aggregate([
@@ -196,6 +200,7 @@ def register():
 
 @app.route('/add_user', methods=['POST'])
 def add_user():
+    next_loc = request.args.get('next_loc')
     data = request.form.to_dict()
     new_user = {
         'username': data['username'].title(),
@@ -217,7 +222,7 @@ def add_user():
         }
         flash('Welcome {} ! Your account was created with {}'
               .format(new_user['username'], new_user['email']), 'success')
-    return redirect('home')
+    return redirect('home') if next_loc is None else redirect(next_loc)
 
 
 @app.route('/check_user', methods=['POST'])
@@ -246,10 +251,12 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/log_usr', methods=['POST'])
-def log_usr():
+@app.route('/log_user', methods=['POST'])
+def log_user():
+    next_loc = request.args.get('next_loc')
     data = request.form.to_dict()
     user_in_db = mongo.db.users.find_one({'email': data['email'].lower()})
+
     if user_in_db and bcrypt.check_password_hash(user_in_db['password'], data['password']):
         user = mongo.db.users.find_one({'_id': user_in_db['_id']}, {'username': 1, 'favorites': 1})
         user = JSONEncoder().encode(user)
@@ -261,13 +268,15 @@ def log_usr():
                     if str(r) == viewed:
                         mongo.db.recipes.update({'_id': ObjectId(viewed)}, {'$inc': {'views': -1}})
         flash('Welcome back {} !'.format(user_in_db['username']), 'success')
-        return redirect('home')
+        return redirect('home') if next_loc is None else redirect(next_loc)
+
     elif user_in_db and not bcrypt.check_password_hash(user_in_db['password'], data['password']):
         flash('Login unsuccessful. Please check email and password provided', 'warning')
-        return redirect('login')
+
     elif not user_in_db:
         flash('Login unsuccessful. Please check email', 'warning')
-        return render_template('login.html')
+
+    return redirect('login') if next_loc is None else redirect(next_loc)
 
 
 @app.route('/logout')
@@ -370,6 +379,7 @@ def delete_recipe(recipe_id):
 @app.route('/editrecipe/<recipe_id>', methods=['GET', 'POST'])
 def edit_recipe(recipe_id):
     this_recipe = mongo.db.recipes.find_one({'_id': ObjectId(recipe_id)})
+    author = mongo.db.users.find_one({'_id': ObjectId(this_recipe['author_id'])}, {'username': 1})
     if request.method == 'POST':
         # Keep checking for active valid connection
         if 'user' not in session:
@@ -432,7 +442,7 @@ def edit_recipe(recipe_id):
 
         return redirect('/recipe/{}'.format(recipe_id))
 
-    return render_template('editrecipe.html', recipe=this_recipe)
+    return render_template('editrecipe.html', recipe=this_recipe, author=author)
 
 
 @app.route('/favme', methods=['POST'])
