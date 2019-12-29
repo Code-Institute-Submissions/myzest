@@ -11,6 +11,7 @@ Table Of Content
         - [Persona](#persona)
         - [User Stories](#user-stories)
     - [Visual](#visual)
+        - [Wireframes](#wireframes)
 - [Tech used](#main-tech-used)
 - [Running MyZest](#running-myzest)
 - [Tests](#tests)
@@ -130,6 +131,14 @@ MyZest is inspired by “material design”. With a mobile first approach, I’v
 I’ve been challenging myself choosing blue and orange tones. As complementary colors, they can be difficult to put together.
 With enough white space to allow them to breath they provide contrast, clear and quick guidance through the layout between interaction elements and static content.
 
+| Primary  | Secondary |
+| ------------- | ------------- |
+| ![#57BA98](https://placehold.it/60x30/E86900/E86900) `#E86900` main  | ![#57BA98](https://placehold.it/60x30/616b80/616b80) `#616b80` main |
+| ![#57BA98](https://placehold.it/60x30/F5B458/F5B458) `#F5B458` light  | ![#57BA98](https://placehold.it/60x30/2A3038/2A3038) `#2A3038` dark |
+| ![#57BA98](https://placehold.it/60x30/F9EECB/F9EECB) `#F9EECB` bright |  |
+| ![#57BA98](https://placehold.it/60x30/993918/993918) `#993918` dark |  |
+
+
 The validation elements (as form inputs) keep the ‘standard’ red and green colors not to overload the first-time learning experience of the users.
 
 **Icons**  
@@ -156,6 +165,14 @@ Vision is human beings dominant sens, our perception relies at 80% on sight. Pho
 It helps them identify almost instantly what they are after. That is why a recipe image is compulsory to add a recipe. 
 This is reflected in my recipe cards design. 
 Half its space for the dish photograph and other half for main details that the photograph may not visually provides (such as cooking duration, difficulty, serving ...).
+
+#### Wireframes
+
+For the wireframes I've used [wireframe|cc](https://wireframe.cc/), an online solution to quickly build simple wireframes.
+They are in the wireframes directory, each device size in its sub-directory in .pdf and .png formats.  
+- [mobile](./wireframes/mobile)
+- [tablet](./wireframes/tablet)
+- [desktop](./wireframes/desktop)
 
 ## Main Tech Used
 
@@ -204,19 +221,20 @@ Half its space for the dish photograph and other half for main details that the 
 
 
 ### Tests
-
+  
 ***IMPORTANT !  
 Make sure to run your tests using a different database***. As well educated tests they clean up after themselves !  
 _It also makes some tests and assertions easier to write.
-You need to set a different URI in the `config.py` file ( as `test_mongo_uri = <uri> ` )_
-**Running Unit tests**
+You need to set a different URI in the `config.py` file ( as `test_mongo_uri = <uri> ` )_  
+
+#### Running Unit tests
 
 Simply run unittest with ` TEST ` environment variable :
 ```bash
 TEST=true python -m unittest discover -s tests/unit/
 ```
 
-**Running End-to-End tests**
+#### Running End-to-End tests
 
 Make sure Selenium and the correct browsers [driver](https://selenium.dev/selenium/docs/api/py/index.html#drivers) are installed :
 
@@ -229,6 +247,39 @@ Make sure Selenium and the correct browsers [driver](https://selenium.dev/seleni
     TEST=true python -m unittest discover -s tests/e2e/
     ```
 
+#### Validations
+
+![cssvalidation](https://img.shields.io/badge/W3C%20CSS%20Validation-%20no%20errors-green)
+![htmlvalidation](https://img.shields.io/badge/W3C%20HTML%20Validation-%20no%20errors-green)
+![JSvalidation](https://img.shields.io/badge/JSHint%20Validation-%20Ok-green)
+
+**HTML**  
+
+[W3C HTML Validator](https://validator.w3.org/) raises errors that concern the Jinja's templating syntax, which is not recognized.
+
+**CSS**  
+
+I'm using experimental vendor extensions and extended pseudo-element selectors, which are not standardized yet.  
+Hence the following warnings from [W3C CSS Validator](https://jigsaw.w3.org/css-validator/) :
+
+- `-moz-appearance` & `-webkit-appearance`  
+I use `appearance` on numbers input to remove the redundant incrementation buttons. The slider
+beneath is preferred as it provides better user interaction experience.  
+_Chrome requires the additional pseudo-element selector : `-webkit-outer-spin-button` and `-webkit-inner-spin-button`._  
+- `input[type=range]::-moz-range-thumb` & `::-webkit-slider-thumb`  
+They are used to override the color of the range sliders handles.
+
+**JavaScript**
+
+I've used [JSHint](https://jshint.com/) to check JavaScript coding.
+- Warnings :
+    - `Bad escaping of EOL. Use option multistr if needed.`. Ignored: multiline strings are supported since ES5.  
+    - `let`. Ignored: 'let' is available in ES6.
+
+- Undefined variables :  
+    - `$` : jQuery.
+    - `M` : Materialize framework.
+    - `noUislider` : noUiSlider. Loaded separately.
 
 ### Deployment
 
