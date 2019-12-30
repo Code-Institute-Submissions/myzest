@@ -12,6 +12,7 @@ Table Of Content
         - [User Stories](#user-stories)
     - [Visual](#visual)
         - [Wireframes](#wireframes)
+    - [Database](#database)
 - [Tech used](#main-tech-used)
 - [Running MyZest](#running-myzest)
 - [Tests](#tests)
@@ -133,9 +134,9 @@ With enough white space to allow them to breath they provide contrast, clear and
 
 | Primary  | Secondary |
 | ------------- | ------------- |
-| ![#57BA98](https://placehold.it/60x30/E86900/E86900) `#E86900` main  | ![#57BA98](https://placehold.it/60x30/616b80/616b80) `#616b80` main |
-| ![#57BA98](https://placehold.it/60x30/F5B458/F5B458) `#F5B458` light  | ![#57BA98](https://placehold.it/60x30/2A3038/2A3038) `#2A3038` dark |
-| ![#57BA98](https://placehold.it/60x30/F9EECB/F9EECB) `#F9EECB` bright |  |
+| ![#57BA98](https://placehold.it/60x30/E86900/E86900) `#E86900` main  | ![#57BA98](https://placehold.it/60x30/616b80/616b80) `#52607b` main |
+| ![#57BA98](https://placehold.it/60x30/F5B458/F5B458) `#F5B458` light  | ![#57BA98](https://placehold.it/60x30/b4c4da/b4c4da) `#b4c4da` light |
+| ![#57BA98](https://placehold.it/60x30/F9EECB/F9EECB) `#F9EECB` bright | ![#57BA98](https://placehold.it/60x30/2A3038/2A3038) `#2A3038` dark |
 | ![#57BA98](https://placehold.it/60x30/993918/993918) `#993918` dark |  |
 
 
@@ -173,6 +174,20 @@ They are in the wireframes directory, each device size in its sub-directory in .
 - [mobile](./wireframes/mobile)
 - [tablet](./wireframes/tablet)
 - [desktop](./wireframes/desktop)
+
+### Database
+
+I’ve chosen to use MongoDB Atlas as database for its document orientated storage.
+
+I wanted the forms interactions to be as simple and fast as possible. New documents are created with a number of fields as little as possible. 
+Same goes with registering a user (not prompted to fill in a bio or avatar picture on first connection).
+
+The [recipe](./database/recipe_schema.json) and [user](./database/user_schema.json) files show how a fully detailed document looks like or will look like after further improvements.
+
+Each recipe criteria has its own collection for maintenance reason.
+Further development will add image to each foodType, category and region criteria to be presented in cards for the users to browse.
+They are retrieved by the app for the user when searching, adding or editing a recipe.
+[db_relation](./database/db_diagram.png) shows the very few relations between collections.
 
 ## Main Tech Used
 
@@ -252,6 +267,7 @@ Make sure Selenium and the correct browsers [driver](https://selenium.dev/seleni
 ![cssvalidation](https://img.shields.io/badge/W3C%20CSS%20Validation-%20no%20errors-green)
 ![htmlvalidation](https://img.shields.io/badge/W3C%20HTML%20Validation-%20no%20errors-green)
 ![JSvalidation](https://img.shields.io/badge/JSHint%20Validation-%20Ok-green)
+![Python](https://img.shields.io/badge/PEP8%20-few%20errors-yellow)
 
 **HTML**  
 
@@ -280,6 +296,12 @@ I've used [JSHint](https://jshint.com/) to check JavaScript coding.
     - `$` : jQuery.
     - `M` : Materialize framework.
     - `noUislider` : noUiSlider. Loaded separately.
+
+**Python PEP8**
+
+I have used [pep8online](http://pep8online.com/) to check my Python code.
+- `E501: line too long` : I'm personally ok with lines a few characters over 79.
+- `E402: module level import not at top of file ` : Voluntary Python cyclic import `__init__.py` & `routes.py`.
 
 ### Deployment
 
