@@ -1,5 +1,15 @@
 # MyZest
 
+![cssvalidation](https://img.shields.io/badge/W3C%20CSS%20Validation-%20no%20errors-sucess)
+![htmlvalidation](https://img.shields.io/badge/W3C%20HTML%20Validation-%20no%20errors-sucess)
+![JSvalidation](https://img.shields.io/badge/JSHint%20Validation-%20Ok-green)
+![Python](https://img.shields.io/badge/PEP8%20-few%20errors-yellowgreen)
+![Coverage](https://img.shields.io/badge/unit%20tests-Pass-sucess)
+![Coverage](https://img.shields.io/badge/e2e%20tests-Pass-sucess)
+![Coverage](https://img.shields.io/badge/tests%20coverage-55%25-green)
+
+![overview](overview_comp.jpg)
+
 **_Live preview_** [on Heroku](https://myzest.herokuapp.com/)       
 
 Table Of Content
@@ -228,7 +238,8 @@ They are retrieved by the app for the user when searching, adding or editing a r
     - URI to your database ( I’m using Atlas )
     - Secret key for Flask secure cookies  
     
-    These are imported in `myzest/__init__.py`
+    These are imported in `myzest/__init__.py`.  
+    _Use `rename_as_config.py` in deployment branch._
 5. Run the app  
     ```bash  
     python run.py  
@@ -263,11 +274,6 @@ Make sure Selenium and the correct browsers [driver](https://selenium.dev/seleni
     ```
 
 #### Validations
-
-![cssvalidation](https://img.shields.io/badge/W3C%20CSS%20Validation-%20no%20errors-green)
-![htmlvalidation](https://img.shields.io/badge/W3C%20HTML%20Validation-%20no%20errors-green)
-![JSvalidation](https://img.shields.io/badge/JSHint%20Validation-%20Ok-green)
-![Python](https://img.shields.io/badge/PEP8%20-few%20errors-yellow)
 
 **HTML**  
 
