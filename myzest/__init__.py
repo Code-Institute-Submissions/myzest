@@ -6,7 +6,7 @@ from os import path
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = config.secret_key
+app.config['SECRET_KEY'] = os.environ.get('secret_key')
 app.config['RECIPE_PIC_DIR'] = path.join(path.dirname(path.realpath(__file__)),
                                          'static/img/recipes/')
 app.config['USER_PIC_DIR'] = path.join(path.dirname(path.realpath(__file__)),
@@ -19,8 +19,7 @@ Set MongoDB URI for Testing and Dev ENV
 for testing ENV run 'TEST_FLAG=true python -m unittest'
 """
 
-app.config['MONGO_URI'] = config.test_mongo_uri if os.environ.get('TEST') \
-    else config.mongo_uri
+app.config['MONGO_URI'] = os.environ.get('mongo_uri')
 
 mongo = PyMongo(app)
 
